@@ -1,68 +1,34 @@
-#! /usr/bin/env python
-#encodig: utf-8
+# encoding: utf-8
+import re
+from bs4 import BeautifulSoup
+import urllib2
 
-import logging
-import sys
-import getopt
-
-
-class Spider(object):
-    def __init__(self, url, deep, thread=10, dbfile='./spyder.log', key=None, detal=9):
+class Sp(object):
+    def __init__(self, url, deep=2):
         self.url = url
         self.deep = deep
-        self.thread = thread
-        self.dbfile = dbfile
-        self.key = key
-        self.detal = detal
 
-    def 
+    def get_soup(self, url):
+        try:
+            html = urllib2.urlopen(url).read()
+            soup = BeautifulSoup(html)
+        except urllib2.HTTPError, e:
+            logging.critical("Get html failed %s %s" % (e.code, e.read()))
+        return soup
 
-def help_message():
-    print '\tspider.py usage:'
-    print '\t\t-h, --help: print help messages.'
-    print '\t\t-u: url to start.'
-    print '\t\t-d: how deep of the spider.'
-    print '\t\t--thread: size of threading pool.'
-    print '\t\t--dbfile: db file to save results.'
-    print '\t\t--key: keywords of the page, optional parameter, default is all the page.'
-    print '\t\t-l: loglevel 1-5 1:debug, 2:info, 3:warning, 4:error, 5:critical.'
-    print '\t\t--selftest: self test, optional.'
+    def get_url(self, start_url):
+        urls = []
+        soup = self.get_soup(url)
+        links = soup.find_all('a')
+        for link in links:
+            _url = link.get('href')
+            if re.match('^(javascript|:;|#)', _url) or _url is None \
+                or re.match('.(jpg|png|bmp|mp3|wma|wmv|gz|zip|rar|iso\
+                             |pdf|txt|db)$', _url):
+                continue
+            if re.match('^(http|https)', _url):
+                urls.append(_url)
+        return urls
 
-def args_process(argvs):
-    try:
-        options, args = getopt.getopt(argvs[1:], "hu:d:l:", ['help',
-                                      'thread=', 'dbfile=', 'selftest'])
-    except Exception, e:
-        sys.exit()
-    op_get = {'detal': 9, 'thread': 10, 'dbfile': './spyder.log',
-              'key': None, 'selftest': False}
-    for opt, values in options:
-        if opt in ['-h', '--help']:
-            help_message()
-            return None
-        elif opt == '-u':
-            op_get['url'] = values
-        elif opt == '-d':
-            op_get['deep'] = values
-        elif opt == '-l':
-            op_get['detal'] = values
-        elif opt == '--thread':
-            op_get['thread'] = values
-        elif opt == '--dbfile':
-            op_get['dbfile'] = values
-        elif opt == '--key':
-            op_get['key'] = values
-        elif opt == 'selftest':
-            op_get['selftest'] = True
-    if not op_get.has_key('url'):
-        raise RuntimeError('Please provide url!')
-    if not op_get.has_key('deep'):
-        raise RuntimeError('Please provide deep to spyder')
-    return op_get
 
-if  __name__ == '__main__':
-    option = args_process(sys.argv)
-    if option is not None:
-        spider = Spider(option['url'], option['deep'], option['thread'],
-                        option['dbfile'], option['key'], option['detal'])
-        spider.start()
+                

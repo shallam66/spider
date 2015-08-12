@@ -15,7 +15,8 @@ class Spider(object):
         self.key = key
         self.detal = detal
 
-    def 
+    def start():
+        
 
 def help_message():
     print '\tspider.py usage:'
